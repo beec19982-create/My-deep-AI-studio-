@@ -1,0 +1,99 @@
+import React, { useState } from 'react';
+import './App.css';
+
+function App() {
+  const [appCode, setAppCode] = useState('');
+  const [video, setVideo] = useState(null);
+  const [audio, setAudio] = useState(null);
+  const [sourceVideo, setSourceVideo] = useState(null);
+  const [targetVideo, setTargetVideo] = useState(null);
+  const [resultVideo, setResultVideo] = useState('');
+  const [generatedImage, setGeneratedImage] = useState('');
+
+  // Handle app code generation with Hugging Face API
+  const handleAppGeneration = async () => {
+    const response = await fetch('http://localhost:5000/generate_app', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'Create a full-stack app with user authentication and a blog' }),
+    });
+    const data = await response.json();
+    setAppCode(data.frontend_code);  // Display generated code here
+  };
+
+  // Handle face swap
+  const handleFaceSwap = async () => {
+    const formData = new FormData();
+    formData.append('source_video', sourceVideo);
+    formData.append('target_video', targetVideo);
+
+    const response = await fetch('http://localhost:5000/swap_faces', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    setResultVideo(data.result_video);
+  };
+
+  // Handle image generation
+  const handleImageGeneration = async () => {
+    const response = await fetch('http://localhost:5000/generate_image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'A futuristic city illuminated by neon lights' }),
+    });
+    const data = await response.json();
+    setGeneratedImage(data.image_path);
+  };
+
+  // Handle app deployment
+  const handleDeployApp = async () => {
+    const response = await fetch('http://localhost:5000/deploy_app', {
+      method: 'POST',
+    });
+    const data = await response.json();
+    alert(data.status);
+  };
+
+  return (
+    <div className="App">
+      <h1>AI-Powered Autonomous App Creator</h1>
+
+      {/* App Generation Section */}
+      <button onClick={handleAppGeneration}>Generate App Automatically</button>
+      <div>
+        <h3>Generated App Code:</h3>
+        <pre>{appCode}</pre>
+      </div>
+
+      {/* Face Swap Section */}
+      <input type="file" onChange={(e) => setSourceVideo(e.target.files[0])} />
+      <input type="file" onChange={(e) => setTargetVideo(e.target.files[0])} />
+      <button onClick={handleFaceSwap}>Face Swap</button>
+
+      {/* Image Generation Section */}
+      <button onClick={handleImageGeneration}>Generate Image</button>
+      {generatedImage && (
+        <div>
+          <h3>Generated Image:</h3>
+          <img src={`http://localhost:5000/${generatedImage}`} alt="Generated" />
+        </div>
+      )}
+
+      {/* App Deployment Section */}
+      <button onClick={handleDeployApp}>Deploy App Automatically</button>
+
+      {/* Show the Resulting Video */}
+      {resultVideo && (
+        <div>
+          <h2>Result Video:</h2>
+          <video controls>
+            <source src={`http://localhost:5000/${resultVideo}`} type="video/mp4" />
+          </video>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App; 
